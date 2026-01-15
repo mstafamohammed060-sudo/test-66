@@ -322,7 +322,7 @@ export default function Home() {
               </div>
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-400 via-blue-400 to-purple-400 bg-clip-text text-transparent animate-gradient">
-                  SwiftShort
+                  Alex
                 </h1>
                 <p className="text-sm text-gray-400">Professional URL Shortening Service</p>
               </div>
@@ -688,7 +688,7 @@ export default function Home() {
             </div>
           </div>
           <p className="text-gray-600 text-sm mt-4">
-            © {new Date().getFullYear()} SwiftShort by ~Alex .D Mekhail~. All rights reserved.
+            © {new Date().getFullYear()} by ~Alex .D Mekhail~. All rights reserved.
           </p>
         </footer>
       </div>
