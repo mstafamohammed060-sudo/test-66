@@ -35,18 +35,18 @@ type ApiResponse = ApiResponseSuccess | ApiResponseError;
 const QRCodeDisplay = ({ url, onClose }: { url: string; onClose: () => void }) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(true);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("");
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Generate QR code immediately when component mounts
   useEffect(() => {
     const generateQRCode = async () => {
-      if (!canvasRef.current) return;
-      
-      setIsGenerating(true);
-      
       try {
+        // Import QRCode dynamically
         const QRCode = (await import('qrcode')).default;
-        await QRCode.toCanvas(canvasRef.current, url, {
+        
+        // Generate QR code as Data URL
+        const dataUrl = await QRCode.toDataURL(url, {
           width: 300,
           margin: 2,
           color: {
@@ -54,6 +54,20 @@ const QRCodeDisplay = ({ url, onClose }: { url: string; onClose: () => void }) =
             light: '#1F2937'
           }
         });
+        
+        setQrCodeDataUrl(dataUrl);
+        
+        // Also draw to canvas for download
+        if (canvasRef.current) {
+          await QRCode.toCanvas(canvasRef.current, url, {
+            width: 300,
+            margin: 2,
+            color: {
+              dark: '#7C3AED',
+              light: '#1F2937'
+            }
+          });
+        }
       } catch (error) {
         console.error('QR Code generation error:', error);
       } finally {
@@ -83,7 +97,7 @@ const QRCodeDisplay = ({ url, onClose }: { url: string; onClose: () => void }) =
     }
   };
 
-  const shareQRCode = async () => {
+ const shareQRCode = async () => {
   const shareData = {
     title: 'QR Code for Shortened URL',
     text: `Scan this QR code to visit: ${url}`,
@@ -141,13 +155,22 @@ const QRCodeDisplay = ({ url, onClose }: { url: string; onClose: () => void }) =
                   <div className="h-10 w-10 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mb-4"></div>
                   <p className="text-gray-400">Generating QR code...</p>
                 </div>
+              ) : qrCodeDataUrl ? (
+                <>
+                  {/* Hidden canvas for download */}
+                  <canvas ref={canvasRef} className="hidden" />
+                  {/* Visible QR code image */}
+                  <img
+                    src={qrCodeDataUrl}
+                    alt={`QR Code for ${url}`}
+                    className="w-64 h-64"
+                  />
+                </>
               ) : (
-                <canvas
-                  ref={canvasRef}
-                  className="w-64 h-64"
-                  title={`QR Code for ${url}`}
-                  aria-label={`QR Code for ${url}`}
-                />
+                <div className="text-center">
+                  <p className="text-red-400 mb-2">Failed to generate QR code</p>
+                  <p className="text-gray-400 text-sm">Please try again</p>
+                </div>
               )}
             </div>
             
@@ -163,7 +186,7 @@ const QRCodeDisplay = ({ url, onClose }: { url: string; onClose: () => void }) =
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={downloadQRCode}
-              disabled={isDownloading || isGenerating}
+              disabled={isDownloading || isGenerating || !qrCodeDataUrl}
               className="flex items-center justify-center space-x-2 py-3 bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isDownloading ? (
